@@ -9,10 +9,12 @@ public class CoursesData
 {
 
     private readonly CoursesMongoDbAdapter _adapter;
+    private readonly CoursesPublish _publisher;
 
-    public CoursesData(CoursesMongoDbAdapter adapter)
+    public CoursesData(CoursesMongoDbAdapter adapter, CoursesPublish publisher)
     {
         _adapter = adapter;
+        _publisher = publisher;
     }
 
     public async Task<CollectionModel<GetCoursesItemModel>> GetAllCoursesAsync()
@@ -52,6 +54,8 @@ public class CoursesData
         };
 
         await _adapter.GetCourseCollection().InsertOneAsync(course);
+        // if doing upsert, do this
+        //await _adapter.GetCourseCollection().ReplaceOneAsync(c => c.Id == course.Id, course, new ReplaceOptions { IsUpsert = true });
 
         var response = new GetCoursesItemModel
         {
@@ -60,28 +64,13 @@ public class CoursesData
             Category = course.Category,
             Description = course.Description
         };
+
+        await _publisher.PublishCourseAsync(course);
         return response;
     }
 
     public async Task<GetCoursesItemModel> AddCourseToAngularAsync(CourseCreateModel request)
     {
-        var course = new Course {
-            Title = request.Title,
-            Description = request.Description,
-            Category = "Angular",
-            NumberOfDays = request.NumberOfDays!.Value,
-            PositionInCategory = 0
-
-        };
-
-        await _adapter.GetCourseCollection().InsertOneAsync(course);
-
-        var response = new GetCoursesItemModel {
-            Id = course.Id.ToString(),
-            Title = course.Title,
-            Category = course.Category,
-            Description = course.Description
-        };
-        return response;
+        return await SaveCourse(request, "Angular");
     }
 }
