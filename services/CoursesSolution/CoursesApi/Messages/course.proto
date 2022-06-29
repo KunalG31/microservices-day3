@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+option csharp_namespace="Courses.Messages";
+
+message Course {
+    string id = 1;
+
+    CourseInformation body = 2;
+    google.protobuf.Timestamp created = 3;
+    message CourseInformation {
+        string id  = 1;
+        string title = 2;
+        string description = 3;
+        string category = 4;
+        int32 numberOfDays = 5;
+    }
+}
+
